@@ -7,14 +7,14 @@ mostrará esos números junto con la palabra “par” o “impar” según proc
 def main():
     numbers = []
     for _ in range(8):
-        num = int(input("Introduce un número entero: "))
+        num = int(input("Input an integer: "))
         numbers.append(num)
 
     for n in numbers:
         if n % 2 == 0:
-            print(f"{n} es par")
+            print(f"{n} is even")
         else:
-            print(f"{n} es impar")
+            print(f"{n} is odd")
 
 if __name__ == "__main__":
     main()
