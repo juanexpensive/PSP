@@ -1,22 +1,15 @@
-def mostrar_rango(inicio, fin):
-    # Si inicio es mayor que fin, intercambiamos
-    if inicio > fin:
-        inicio, fin = fin, inicio
-    
-    print(f"Números entre {inicio} y {fin}:")
-    for i in range(inicio + 1, fin):
-        print(i, end=" ")
-    print()  # salto de línea
 
+def show_numbers_between(a, b):
+    if a > b:
+        a, b = b, a  
+    for number in range(a + 1, b):
+        print(number)
 
 def main():
-    try:
-        n1 = int(input("Introduce el primer número entero: "))
-        n2 = int(input("Introduce el segundo número entero: "))
-        mostrar_rango(n1, n2)
-    except ValueError:
-        print("❌ Debes introducir solo números enteros.")
-
+    num1 = int(input("Introduce el primer número entero: "))
+    num2 = int(input("Introduce el segundo número entero: "))
+    show_numbers_between(num1, num2)
 
 if __name__ == "__main__":
     main()
+    
