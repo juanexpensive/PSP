@@ -1,16 +1,15 @@
+# Create the substitution dictionary
+substitution = {
+    'e': 'p', 'i': 'v', 'k': 'i', 'm': 'u', 'p': 'm',
+    'q': 't', 'r': 'e', 's': 'r', 't': 'k', 'u': 'q',
+    'v': 's'
+}
 
-def main():
-    # Crear el diccionario de sustitución
-    sustitution = {
-        'e': 'p', 'i': 'v', 'k': 'i', 'm': 'u', 'p': 'm',
-        'q': 't', 'r': 'e', 's': 'r', 't': 'k', 'u': 'q',
-        'v': 's'
-    }
+# Ask the user to input a phrase and convert it to lowercase
+phrase = input("Input a phrase: ").lower()
 
-    phrase = input("Input a phrase: ").lower()
-    crypted_phrase = ''.join(sustitution.get(letter, letter) for letter in phrase)
+# Replace each letter according to the dictionary, keep letters not in the dictionary unchanged
+crypted_phrase = ''.join(substitution.get(letter, letter) for letter in phrase)
 
-    print(f"crypted phrase: {crypted_phrase}")
-
-if __name__ == "__main__":
-    main()
+# Print the encrypted phrase
+print(f"Crypted phrase: {crypted_phrase}")

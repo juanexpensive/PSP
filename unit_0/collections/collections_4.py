@@ -1,17 +1,15 @@
-"""
-Escribe un programa que lea 10 números por teclado y 
-que luego los muestre ordenados de mayor a menor.
-"""
-def main():
-    numbers = []
-    for _ in range(10):
-        num = float(input("Input a number: "))
-        numbers.append(num)
+# Create an empty list to store the numbers
+numbers = []
 
-    numbers.sort(reverse=True)
-    print("Numbers sorted from highest to lowest:")
-    for n in numbers:
-        print(n)
+# Ask the user to enter 10 numbers
+for _ in range(10):
+    num = float(input("Input a number: "))
+    numbers.append(num)  # Add each number to the list
 
-if __name__ == "__main__":
-    main()
+# Sort the list from highest to lowest
+numbers.sort(reverse=True)
+
+# Print the sorted numbers
+print("Numbers sorted from highest to lowest:")
+for n in numbers:
+    print(n)
