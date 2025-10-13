@@ -1,31 +1,41 @@
-"""
-Crea una clase llamada Punto que representará un punto de dos dimensiones en un plano. 
-Solo contendrá dos atributos enteros llamados x e y (coordenadas). 
-Debe tener los siguientes métodos:
-Un constructor con parámetros que copie las coordenadas pasadas como argumento a los atributos del objeto.
-__str__(): Devuelve una cadena con el formato “(x, y)”. Ejemplo: “(7, -5)”
-setXY(x,y): Modifica ambas coordenadas.
-desplaza(dx, dy): Desplaza el punto la cantidad (dx,dy) indicada. 
-Ejemplo: Si el punto (1,1) se desplaza (2,5) entonces estará en (3,6).
-distancia(punto): 
-Calcula y devuelve la distancia entre el propio objeto (self) y otro objeto (punto) que se pasa como parámetro (distancia entre dos coordenadas).
-"""
+import math  # Import math for distance calculation
 
-class Punto:
+class Point:
     def __init__(self, x, y):
+        # Initialize the point with coordinates (x, y)
         self.x = x
         self.y = y
 
     def __str__(self):
-        return f"({self.x},{self.y})"
-    
-    def setXY (x,y):
-        x = input()
-        y = input()
-    
-    def move(dx,dy):
-        return x + dx and y + dy
-    
-    def distance (punto):
-        return x - dx and y - dx
+        # Return the point as a string in the form (x, y)
+        return f"({self.x}, {self.y})"
 
+    def setXY(self, x, y):
+        # Set both coordinates to new values
+        self.x = x
+        self.y = y
+
+    def move(self, dx, dy):
+        # Move the point by (dx, dy)
+        self.x += dx
+        self.y += dy
+
+    def distance(self, other_point):
+        # Calculate the distance between this point and another point
+        dx = self.x - other_point.x
+        dy = self.y - other_point.y
+        return math.sqrt(dx**2 + dy**2)
+
+p1 = Point(1, 1)
+p2 = Point(4, 5)
+
+print(p1)  # (1, 1)
+print(p2)  # (4, 5)
+
+p1.move(2, 3)
+print(p1)  # (3, 4)
+
+p2.setXY(7, -2)
+print(p2)  # (7, -2)
+
+print(p1.distance(p2))  # 7.211...
