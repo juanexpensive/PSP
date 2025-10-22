@@ -5,15 +5,23 @@ app = FastAPI()
 
 class Book (BaseModel):
     id: int  
-    isbn: str
+    isbn: int
     npages: int 
-    author_id: int 
+ 
 
 book_list = [
-    Book(id=1, isbn="978-84-339-6616-2", npages=420, ),
-    Book(id=2, isbn="978-84-9989-980-6", npages=666, ),
-    Book(id=3, isbn="978-607-31-8979-3", npages=500, ),
+    Book(id=1, isbn= 9788433966162, npages=420,  ),
+    Book(id=2, isbn= 9788499899806, npages=666,  ),
+    Book(id=3, isbn= 9786073189793, npages=500,  ),
+    Book(id=1, isbn= 9788433966162, npages=420, ) , 
+    Book(id=2, isbn= 9788499899806, npages=666, ), 
+    Book(id=3, isbn= 9786073189793, npages=500, ), 
+    Book(id=4, isbn= 9780061120084, npages=208, ), 
+    Book(id=5, isbn= 9780743273565, npages=300, ), 
+    Book(id=6, isbn= 9788437604947, npages=150, ), 
+    Book(id=7, isbn= 9780345339683, npages=900, ), 
 ]
+
 
 def next_id():
     return (max(book_list,key=id).id+1)
@@ -29,7 +37,7 @@ def getBook_list(id:int):
     
 @app.post ("/Book", status_code=201, response_model=Book)
 def add_book(book: Book):
-    Book.id = next_id()
+    book.id = next_id()
     book_list.append(book)
     return book
 
