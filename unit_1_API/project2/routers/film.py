@@ -3,6 +3,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
+from unit_1_API.project2.routers.director import search_director_exists
+
 # Router con prefijo plural
 router = APIRouter(prefix="/films", tags=["films"])
 
@@ -22,48 +24,58 @@ films_list = [
     Film(id=99, title="Matrix", duration=136, idDirector=100)
 ]
 
+def next_id() -> int:
+    """Calcula el siguiente ID disponible para una nueva película."""
+    return max(films_list, key=lambda film: film.id).id + 1 if films_list else 1
+    
+# 1. READ ALL (GET)
 @router.get("/")
-def film():
+def get_films():
     return films_list
 
-@router.get("/{id}")
-def film (id:int):
+# 2. READ ONE (GET by ID)
+@router.get("/{id}", response_model=Film)
+def get_film(id: int):
     films = [film for film in films_list if film.id == id]
-
-    if len(films) != 0:
-        return films [0]
-    raise HTTPException(status_code=404,detail="film not found")
-
-def search_film (id:int):
-    films = [film for film in films_list if film.id == id]
-
-    if len(films) != 0:
+    if films:
         return films[0]
-    else:
-        return {"error" : "No film found"}
-    
-def next_id():
-    return (max(films_list,key=id).id+1)
-    
-@router.post ("/films",status_code=201,response_model=film)
-def add_film (film: film):
+    raise HTTPException(status_code=404, detail="Film not found")
+
+# 3. CREATE (POST)
+@router.post("/", status_code=201, response_model=Film)
+def add_film(film: Film):
+    if not search_director_exists(film.idDirector):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Director con ID {film.idDirector} no encontrado. No se puede añadir la película."
+        )
+
     film.id = next_id()
     films_list.append(film)
     return film
 
-@router.put("/films/{id}",response_model=film)
-def modify_film (id: int, film: film):
-    for index, saved_film in enumerate (films_list):
+# 4. UPDATE (PUT)
+@router.put("/{id}", response_model=Film)
+def modify_film(id: int, film: Film):
+    if not search_director_exists(film.idDirector):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Director con ID {film.idDirector} no encontrado. No se puede modificar la película."
+        )
+
+    for index, saved_film in enumerate(films_list):
         if saved_film.id == id:
             film.id = id
             films_list[index] = film
             return film
-        raise HTTPException(status_code=404, detail="film not found")
+            
+    raise HTTPException(status_code=404, detail="Film not found")
     
-@router.delete("/films/{id}")
-def delete_film (id:int):
+# 5. DELETE (DELETE)
+@router.delete("/{id}", status_code=200)
+def delete_film(id: int):
     for saved_film in films_list:
         if saved_film.id == id:
             films_list.remove(saved_film)
             return {}
-        raise HTTPException(status_code=404, detail="film not found")
+    raise HTTPException(status_code=404, detail="Film not found")
