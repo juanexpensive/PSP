@@ -14,7 +14,7 @@ app = FastAPI()
 app.include_router(books_router)
 app.include_router(authors_router)
 app.include_router(auth_users_router)
-app.include_router()
+
 app.mount("/static", StaticFiles(directory="static"),name="static")
 
 # Ruta raíz de bienvenida

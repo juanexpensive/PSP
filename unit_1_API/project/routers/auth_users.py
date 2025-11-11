@@ -56,7 +56,6 @@ users_db = {
     }
 }
 
-
 @router.post("/register",status_code=201 )
 def register(user: UserDB):
     if user.username not in users_db:
