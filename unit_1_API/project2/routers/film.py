@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-from unit_1_API.project2.routers.director import search_director_exists
+from routers.director import search_director_exists, directors_list
 
 # Router con prefijo plural
 router = APIRouter(prefix="/films", tags=["films"])
@@ -44,7 +44,7 @@ def get_film(id: int):
 # 3. CREATE (POST)
 @router.post("/", status_code=201, response_model=Film)
 def add_film(film: Film):
-    if not search_director_exists(film.idDirector):
+    if not search_director_exists(film.idDirector, directors_list):
         raise HTTPException(
             status_code=400,
             detail=f"Director con ID {film.idDirector} no encontrado. No se puede añadir la película."
@@ -57,7 +57,7 @@ def add_film(film: Film):
 # 4. UPDATE (PUT)
 @router.put("/{id}", response_model=Film)
 def modify_film(id: int, film: Film):
-    if not search_director_exists(film.idDirector):
+    if not search_director_exists(film.idDirector, directors_list):
         raise HTTPException(
             status_code=400,
             detail=f"Director con ID {film.idDirector} no encontrado. No se puede modificar la película."

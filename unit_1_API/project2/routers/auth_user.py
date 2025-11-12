@@ -1,8 +1,9 @@
-import datetime
+from datetime import *
 from pydantic import BaseModel
 from fastapi import Depends, FastAPI, HTTPException, APIRouter
 
 import jwt
+from jwt import PyJWTError
 
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
@@ -69,10 +70,9 @@ def register(user: UserDB):
     if user.username not in users_db:
         hashed_password = password_hash.hash(user.password)
         user.password = hashed_password
-        users_db[user.username] = user
+        users_db[user.username] = user.model_dump()
         return user
-    else:
-        raise HTTPException (status_code = 409, detail = "User already exists")
+    raise HTTPException (status_code = 409, detail = "User already exists")
     
 @router.post("/login")
 async def login(form: OAuth2PasswordRequestForm = Depends()):
@@ -80,9 +80,29 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
     if username:
         #Si el usuario eiste en la base de datos
         #comprobamos las contraseñas
-        if password_hash.verify(form.password,username["password"]):
-            expire = datetime.now(datetime.timezone.utc)+datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-            access_token = {"sub":form.username, "exp":expire}
-            token = jwt.encode(access_token,SECRET_KEY,algorithm=ALGORITHIM)
-            return{"access_token":token, "token_type":"bearer"}
+        user = UserDB(**users_db[form.username])
+        try: 
+            if password_hash.verify(form.password,username["password"]):
+                expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                access_token = {"sub":form.username, "exp":expire}
+                token = jwt.encode(access_token,SECRET_KEY,algorithm=ALGORITHIM)
+                return{"access_token":token, "token_type":"bearer"}
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Error en la autentificacion")
     raise HTTPException (status_code=401, detail="Usuario o contraseña incorrectos")
+
+
+async def auth_user(token: str = Depends(oauth2)):
+    try: 
+        username = jwt.decode (token, SECRET_KEY, algorithm=ALGORITHIM).get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail= "credenciales de autenticacion invalidas",
+                                headers= {"WWW-Authenticate: Bearer"})
+    except PyJWTError:
+        raise HTTPException(status_code=401, detail= "credenciales de autenticacion invalidas",
+                                headers= {"WWW-Authenticate: Bearer"})
+    user = User(**users_db[username])
+
+    if user.disable:
+        raise HTTPException(status_code=400, detail="usuario inactivo")
+    return user

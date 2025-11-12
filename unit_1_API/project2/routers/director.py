@@ -67,4 +67,4 @@ def delete_director(id: int):
         if saved_director.id == id:
             directors_list.remove(saved_director)
             return {}
-        raise HTTPException(status_code=404, detail="Director not found")
+    raise HTTPException(status_code=404, detail="Director not found")
