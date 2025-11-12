@@ -3,6 +3,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
+
+
+
+#FALTA IMPORT DE AUTHUSER PARA USAR EL AUTHENTICATE Y EL AUTHENTICATION DEBES PONERLO EN LOS METODOS COMO POST
+
+
 # Router con prefijo plural
 router = APIRouter(prefix="/directors", tags=["directors"])
 
