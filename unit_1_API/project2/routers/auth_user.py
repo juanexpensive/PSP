@@ -18,7 +18,7 @@ oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 ALGORITHIM = "HS256"
 
 #Duracion del token
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 10
 
 #Clave que se utilizara como semilla para generar el token
 #openssl rand -hex 32 
@@ -92,7 +92,7 @@ async def login(form: OAuth2PasswordRequestForm = Depends()):
     raise HTTPException (status_code=401, detail="Usuario o contraseña incorrectos")
 
 
-async def auth_user(token: str = Depends(oauth2)):
+async def Authorization(token: str = Depends(oauth2)):
     try: 
         username = jwt.decode (token, SECRET_KEY, algorithm=ALGORITHIM).get("sub")
         if username is None:
@@ -106,3 +106,14 @@ async def auth_user(token: str = Depends(oauth2)):
     if user.disable:
         raise HTTPException(status_code=400, detail="usuario inactivo")
     return user
+
+
+# users/me endpoint (ruta protegida)
+@router.get("/users/me")
+async def read_users_me(current_user: User = Depends(auth_user)):
+    """
+    Esta ruta está protegida por la dependencia auth_user.
+    Si el token es válido, current_user contendrá el objeto User.
+    """
+    # Usamos .model_dump() para devolver el objeto Pydantic como un diccionario JSON
+    return {"user_info": current_user.model_dump(), "message": "Acceso concedido"}
