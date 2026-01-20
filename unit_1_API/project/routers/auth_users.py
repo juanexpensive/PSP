@@ -9,7 +9,7 @@ from pwdlib import PasswordHash
 
 
 
-router= APIRouter()
+router= APIRouter(prefix="/usersdb",tags=["usersdb"])
 oauth2 = OAuth2PasswordBearer(tokenUrl="login")
 
 #Definimos el algoritmo de encriptacion

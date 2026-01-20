@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import Optional
 app = FastAPI()
 
 class User(BaseModel):
-    id : int
+    id : Optional [str] = None
     name : str
     surname : str
     age : int

@@ -1,119 +1,129 @@
-from datetime import *
+from datetime import datetime, timedelta, timezone
+from fastapi import APIRouter, FastAPI, Depends, HTTPException
 from pydantic import BaseModel
-from fastapi import Depends, FastAPI, HTTPException, APIRouter
-
-import jwt
-from jwt import PyJWTError
-
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jwt.exceptions import InvalidTokenError
+
+# Librería JWT
+import jwt
+
+# Para trabajar las excepciones de los tokens
+from jwt.exceptions import InvalidTokenError, PyJWTError
+
+# Librería para aplicar un hash a la contraseña
 from pwdlib import PasswordHash
 
+# Definimos el algoritmo de encriptación
+ALGORITHM = "HS256"
 
+# Duración del token
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
 
-router= APIRouter()
-oauth2 = OAuth2PasswordBearer(tokenUrl="login")
+# Clave que se utilizará como semilla para generar el token
+# openssl rand -hex 32
+SECRET_KEY = "87ab51098990feb4a2f78da9c911187a71290ebd9e98e56d8b24090815f2ce6f"
 
-#Definimos el algoritmo de encriptacion
-ALGORITHIM = "HS256"
-
-#Duracion del token
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
-
-#Clave que se utilizara como semilla para generar el token
-#openssl rand -hex 32 
-
-SECRET_KEY = "f21d90bab26a85de30ff95b2ad9c946b36530dec062cfad0aee4cd852b15ed5e"
-
-#Objeto que se utilizara para el calculo del hash y
-#la verificacion de las contraseñas
-
+# Objeto que se utilizará para el cálculo del hash y 
+# la verificación de las contraseñas
 password_hash = PasswordHash.recommended()
 
-class User(BaseModel):
-    username : str
-    fullname : str
-    email : str
-    disable : bool
+router = APIRouter()
+oauth2 = OAuth2PasswordBearer(tokenUrl="login")
+
+# Clase Director (el objeto que se autentica)
+class Director(BaseModel):
+    username: str
+    fullname:str
+    email:str
+    disabled: bool | None = False
+
+# Clase DirectorDB (para almacenar la contraseña hasheada)
+class DirectorDB(Director):
+    hashed_password: str
 
 
-class UserDB (User):
-    password: str
-
-
-users_db = {
-    "juanclassy" : {
-        "username" : "juanclassy",
-        "fullname" : "Juan Caro",
-        "email" : "carovaquerojuan@gmail.com",
-        "disable" : False,
-        "password" : "mayapayo",
-     },
-    "mayica" : {
-        "username" : "mayica",
-        "fullname" : "Maya Mayez",
-        "email" : "maphergame@game.es",
-        "disable" : False,
-        "password" : "juanpayo",
-    },
-    "mayica3":  {
-        "username" : "mayica3",
-        "fullname" : "Maya Mayez",
-        "email" : "maphergame@game.es",
-        "disable" : False,
-        "password" : "juanpayo"
-  }
+# Base de datos simulada de Directores
+fake_directors_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "fullname": "John Doe",
+        "email": "johndoe@example.com",
+        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$wagCPXjifgvUFBzq4hqe3w$CYaIb8sB+wtD+Vu/P4uod1+Qof8h+1g7bbDlBID48Rc",
+        "disabled": False
+    }
 }
 
-@router.post("/register",status_code=201 )
-def register(user: UserDB):
-    if user.username not in users_db:
-        hashed_password = password_hash.hash(user.password)
-        user.password = hashed_password
-        users_db[user.username] = user.model_dump()
-        return user
-    raise HTTPException (status_code = 409, detail = "User already exists")
+# Función para buscar Director en la DB simulada
+def search_director_db(username: str) -> DirectorDB | None:
+    if username in fake_directors_db:
+        return DirectorDB(**fake_directors_db[username])
+    return None
+
+# Función de dependencia de autenticación (nombre solicitado: auth_user)
+async def auth_user(token:str = Depends(oauth2)) -> Director: 
+    # Nos creamos un objeto para almacenar la excepción que vamos a lanzar en varias ocasiones
+    exception = HTTPException(status_code=401, 
+                                 detail="Credenciales de autenticación inválidas", 
+                                 headers={"WWW-Authenticate" : "Bearer"})
     
-@router.post("/login")
-async def login(form: OAuth2PasswordRequestForm = Depends()):
-    username = users_db.get(form.username)
-    if username:
-        #Si el usuario eiste en la base de datos
-        #comprobamos las contraseñas
-        user = UserDB(**users_db[form.username])
-        try: 
-            if password_hash.verify(form.password,username["password"]):
-                expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                access_token = {"sub":form.username, "exp":expire}
-                token = jwt.encode(access_token,SECRET_KEY,algorithm=ALGORITHIM)
-                return{"access_token":token, "token_type":"bearer"}
-        except Exception as e:
-            raise HTTPException(status_code=400, detail="Error en la autentificacion")
-    raise HTTPException (status_code=401, detail="Usuario o contraseña incorrectos")
-
-
-async def Authorization(token: str = Depends(oauth2)):
-    try: 
-        username = jwt.decode (token, SECRET_KEY, algorithm=ALGORITHIM).get("sub")
+    try:        
+        # Desencriptamos el token para obtener el username
+        username = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM).get("sub")
         if username is None:
-            raise HTTPException(status_code=401, detail= "credenciales de autenticacion invalidas",
-                                headers= {"WWW-Authenticate: Bearer"})
+            raise exception      
     except PyJWTError:
-        raise HTTPException(status_code=401, detail= "credenciales de autenticacion invalidas",
-                                headers= {"WWW-Authenticate: Bearer"})
-    user = User(**users_db[username])
+        # Si falla la decodificación o no encuentra la clave "sub"
+        raise exception
+        
+    # Buscamos en la base de datos de Directores
+    director_data = fake_directors_db.get(username)
+    if director_data is None:
+        raise HTTPException(status_code=401, 
+                                 detail="Director no encontrado o inválido", 
+                                 headers={"WWW-Authenticate" : "Bearer"})
 
-    if user.disable:
-        raise HTTPException(status_code=400, detail="usuario inactivo")
-    return user
+    director = Director(**director_data)
+
+    if director.disabled:
+        # Si el director está deshabilitado lanzamos excepción
+        raise HTTPException(status_code=400, 
+                                 detail="Director inactivo")   
+
+    # Retornamos un director correcto y habilitado
+    return director
 
 
-# users/me endpoint (ruta protegida)
-@router.get("/users/me")
-async def read_users_me(current_user: User = Depends(auth_user)):
-    """
-    Esta ruta está protegida por la dependencia auth_user.
-    Si el token es válido, current_user contendrá el objeto User.
-    """
-    # Usamos .model_dump() para devolver el objeto Pydantic como un diccionario JSON
-    return {"user_info": current_user.model_dump(), "message": "Acceso concedido"}
+@router.post("/register", status_code=201)
+async def register_director(director: DirectorDB): # Registra un Director
+    print("entro en el registro")
+    # Hasheamos la contraseña
+    new_password = password_hash.hash(director.hashed_password)
+    director.hashed_password = new_password
+    # Usamos fake_directors_db
+    fake_directors_db[director.username] = director.model_dump()
+    return director
+
+
+@router.post("/login")
+async def login(form: OAuth2PasswordRequestForm = Depends()):    
+
+    # Miramos si el director existe en la Base de Datos
+    director_data = fake_directors_db.get(form.username) 
+    if not director_data:
+        raise HTTPException(status_code = 400, detail="Director no encontrado") # Mensaje modificado
+    
+    director = DirectorDB(**director_data)
+
+    # Comprobamos la contraseña
+    if not password_hash.verify(form.password, director.hashed_password):
+        raise HTTPException(status_code=400, detail="La contraseña no es correcta")   
+
+    # Generamos el token de acceso
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = {"sub" : director.username, "exp":expire}
+    token = jwt.encode(access_token, SECRET_KEY, algorithm=ALGORITHM)
+    
+    return {"access_token" : token, "token_type": "bearer"}
+
+@router.get("/auth/me", response_model=Director) 
+async def me(director: Director = Depends(auth_user)): # Usa la dependencia auth_user y devuelve un Director
+    return director

@@ -1,9 +1,7 @@
 # unit_1_API/main.py
 
 from fastapi import FastAPI
-from routers.book import router as books_router
-from routers.author import router as authors_router
-from routers.auth_users import router as auth_users_router
+from .routers import users, book, author, auth_users, users_db
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 
@@ -11,9 +9,12 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 app = FastAPI()
 
 # Incluimos los routers
-app.include_router(books_router)
-app.include_router(authors_router)
-app.include_router(auth_users_router)
+app.include_router(users.router)
+app.include_router(book.router)
+app.include_router(auth_users.router)
+app.include_router(users_db.router)
+app.include_router(author.router)
+
 
 app.mount("/static", StaticFiles(directory="static"),name="static")
 

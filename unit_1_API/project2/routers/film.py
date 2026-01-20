@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-from routers.director import search_director_exists, directors_list
+from routers.directors import search_director_exists, directors_list
 
 # Router con prefijo plural
 router = APIRouter(prefix="/films", tags=["films"])

@@ -3,21 +3,20 @@ from fastapi.staticfiles import StaticFiles
 
 # --- CORRECCIÓN CRÍTICA DE IMPORTACIÓN ---
 # Usamos "." para indicar que 'routers' está dentro del paquete actual (unit_1_API).
-from routers.director import router as directors_router
-from routers.film import router as films_router
-from routers.auth_user import router as auth_users_router
+from routers import auth_user,directors,directors_db,film
 # ----------------------------------------
 
 # Inicializamos la aplicación
 app = FastAPI()
 
 # Incluimos los routers
-app.include_router(directors_router)
-app.include_router(films_router)
-app.include_router(auth_users_router)
+app.include_router(directors.router)
+app.include_router(film.router)
+app.include_router(auth_user.router)
+app.include_router(directors_db.router)
 
 # Montamos los archivos estáticos
-app.mount("/static", StaticFiles(directory="static"), name="static")
+#app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Ruta raíz de bienvenida
 @app.get("/")
