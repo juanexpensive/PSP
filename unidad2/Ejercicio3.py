@@ -6,32 +6,38 @@
 from multiprocessing import Process, Queue
 
 def leer(cola):
-    fichero = open("Ejercicio3.txt")
+    fichero =  open("Ejercicio3.txt")
     for linea in fichero:
         numero = int(linea.strip())
         cola.put(numero)
     cola.put(None)
 
-def suma(cola):
+def suma(cola, resultado_cola):
     total = 0
     item = cola.get()
     while item  is not None:
         total +=item
         item = cola.get()
-    return total
+    resultado_cola.put(total)
+    
 
 
-if __name__ == "__main__":
-    queue = Queue()
-    p1 = Process(target=leer, args=(queue,))
-    p2 = Process(target=suma, args=(queue,))
+def main():
+    cola = Queue()
+
+
+    p1 = Process(target=leer, args=(cola,))
+    p2 = Process(target=suma, args=(cola,))
 
     p1.start()
     p2.start()
 
     p1.join()
-    queue.put(None)
-
     p2.join()
 
+    total = cola.get()
+    print (f"Resultado es: {total}")
     print ("Se han terminado ambos procesos")
+
+if __name__ == "__main__":
+    main()
