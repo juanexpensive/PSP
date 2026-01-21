@@ -1,4 +1,4 @@
-from multiprocessing import Process  # Importa la clase Process para crear procesos en paralelo
+from multiprocessing import Process  
 
 # Función que suma todos los números desde 1 hasta x
 def suma(x):
@@ -6,15 +6,15 @@ def suma(x):
     print(f"Suma hasta {x}: {total}")  
 
 if __name__ == '__main__':
-    numeros = [10, 20, 50, 100]  
+    n = int(input("Introduce un numero: "))  # aquí estaba el problema
+
     procesos = []  
 
-    # Creamos un proceso por cada número de la lista
-    for n in numeros:
-        p = Process(target=suma, args=(n,))  # La coma convierte (n,) en una tupla de un elemento
-        procesos.append(p)  # Guardamos el proceso en la lista
-        p.start()  # Iniciamos el proceso, se ejecuta suma(n) en paralelo
+    # Creamos el proceso usando el número introducido
+    p = Process(target=suma, args=(n,))  
+    procesos.append(p)  
+    p.start()  
 
-    # Esperamos a que todos los procesos terminen antes de continuar
+    # Esperamos a que termine
     for p in procesos:
-        p.join()  # join() bloquea el programa principal hasta que el proceso p termine
+        p.join()
